@@ -85,7 +85,7 @@ vector<JPetHit> TaskC::createHits(const vector<JPetRawSignal>&signals){
 }
 
 void TaskC::terminate(){
-	saveHits(createHits(fSignals)); //if there is something left
+//	saveHits(createHits(fSignals)); //if there is something left
 	INFO( Form("From %d initial signals %d hits were paired.", 
 		   static_cast<int>(getStatistics().getCounter("No. initial signals")),
 		   static_cast<int>(getStatistics().getCounter("No. found hits")) )
@@ -96,11 +96,10 @@ void TaskC::terminate(){
 void TaskC::saveHits(const vector<JPetHit>&hits){
 	assert(fWriter);
 	for (auto hit : hits){
-		// here one can impose any conditions on hits that should be
-		// saved or skipped
-		// for now, all hits are written to the output file
-		// without checking anything
-		fWriter->write(hit);
+//		if(2 == hit.getSignalA().getPM().getScin().getID())
+//		{
+	          fWriter->write(hit);
+//		}
 	}
 }
 void TaskC::setWriter(JPetWriter* writer){fWriter =writer;}

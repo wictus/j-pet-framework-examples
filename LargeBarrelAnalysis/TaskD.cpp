@@ -16,6 +16,7 @@
 #include <iostream>
 #include <JPetWriter/JPetWriter.h>
 #include "TaskD.h"
+#include "TF1.h"
 
 TaskD::TaskD(const char * name, const char * description):JPetTask(name, description){}
 void TaskD::init(const JPetTaskInterface::Options& opts){
@@ -41,8 +42,8 @@ void TaskD::init(const JPetTaskInterface::Options& opts){
 void TaskD::exec(){
 	//getting the data from event in propriate format
 	if(auto hit =dynamic_cast<const JPetHit*const>(getEvent())){
-		fillHistosForHit(*hit);
-		fWriter->write(*hit);
+			fillHistosForHit(*hit);
+			fWriter->write(*hit);
 	}
 }
 
@@ -51,14 +52,29 @@ void TaskD::terminate(){
 	// save timeDiffAB mean values for each slot and each threshold in a JPetAuxilliaryData object
 	// so that they are available to the consecutive modules
 	getAuxilliaryData().createMap("timeDiffAB mean values");
-
+	std::ofstream kiko;
+	kiko.open("results.txt");
 	for(auto & slot : getParamBank().getBarrelSlots()){
 		for (int thr=1;thr<=4;thr++){
 			const char * histo_name = formatUniqueSlotDescription(*(slot.second), thr, "timeDiffAB_");
 			double mean = getStatistics().getHisto1D(histo_name).GetMean();
 			getAuxilliaryData().setValue("timeDiffAB mean values", histo_name, mean);
+			TH1F* histoToSave = &(getStatistics().getHisto1D(histo_name) );
+			int highestBin = histoToSave->GetBinCenter( histoToSave->GetMaximumBin() );
+			histoToSave->Fit("gaus","","", highestBin-2, highestBin+2);
+			TCanvas* c = new TCanvas();
+			histoToSave->Draw();
+			std::string sHistoName = histo_name; sHistoName+=".png";
+//			c->SaveAs( sHistoName.c_str() );
+			if( histoToSave->GetEntries() != 0 )
+			{
+				TF1 *fit = histoToSave->GetFunction("gaus");
+				kiko << slot.first << "\t" << fit->GetParameter(1) << std::endl;
+			}
+			
 		}
 	}
+	kiko.close();
 	
 }
 

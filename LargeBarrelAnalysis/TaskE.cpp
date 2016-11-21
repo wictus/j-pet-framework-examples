@@ -18,12 +18,39 @@
 #include <JPetHitUtils/JPetHitUtils.h>
 #include "TaskE.h"
 using namespace std;
+
+void TaskE::setSlotsAndCuts(){
+
+slots.push_back(4);
+slots.push_back(20);
+slots.push_back(35);
+
+TOTcuts.push_back(0);
+TOTcuts.push_back(43);
+TOTcuts.push_back(44);
+TOTcuts.push_back(45);
+TOTcuts.push_back(46);
+TOTcuts.push_back(47);
+TOTcuts.push_back(48);
+TOTcuts.push_back(49);
+TOTcuts.push_back(50);
+TOTcuts.push_back(51);
+TOTcuts.push_back(52);
+TOTcuts.push_back(53);
+TOTcuts.push_back(54);
+
+}
+
 TaskE::TaskE(const char * name, const char * description):JPetTask(name, description){}
 TaskE::~TaskE(){}
 void TaskE::init(const JPetTaskInterface::Options& opts){
+	setSlotsAndCuts();
+	std::cout << "Slots size: " <<slots.size() <<std::endl;
+	std::cout <<"Cuts size: " << TOTcuts.size() << std::endl;
 	fBarrelMap.buildMappings(getParamBank());
 	for(auto & layer : getParamBank().getLayers()){
 		for (int thr=1;thr<=4;thr++){
+		/*
 			// create histograms of Delta ID
 			char * histo_name = Form("Delta_ID_for_coincidences_layer_%d_thr_%d", fBarrelMap.getLayerNumber(*layer.second), thr);
 			char * histo_title = Form("%s;#Delta ID", histo_name); 
@@ -45,6 +72,31 @@ void TaskE::init(const JPetTaskInterface::Options& opts){
 				histo_name = Form("TOT_vs_TOT_layer_%d_thr_%d_side_%c", fBarrelMap.getLayerNumber(*layer.second), thr, side);
 				histo_title = Form("%s;TOT [ns];TOT [ns]", histo_name); 
 				getStatistics().createHistogram( new TH2F(histo_name, histo_title, 120, 0., 120., 120, 0., 120.));
+			}
+		*/
+			// create Histogram of TOT for selected slot side A i
+			char* histo_name,*histo_title;
+			for(unsigned int i = 0; i < slots.size(); i++){
+/*				histo_name = Form("TOT_layer_%d_slot_%d_thr%d_side_A_noCoin", fBarrelMap.getLayerNumber(*layer.second), slots[i], thr);
+				histo_title = Form("%s;TOT [ns]", histo_name);
+				getStatistics().createHistogram( new TH1F(histo_name, histo_title, 700,0.0, 70.0));
+			
+				histo_name = Form("TOT_layer_%d_slot_%d_thr%d_side_A_coin", fBarrelMap.getLayerNumber(*layer.second), slots[i], thr);
+				histo_title = Form("%s;TOT [ns]", histo_name);
+				getStatistics().createHistogram( new TH1F(histo_name, histo_title, 700,0.0, 70.0));
+				for(unsigned int j = 0; j < TOTcuts.size(); j++){
+				histo_name = Form("#DeltaT_layer_%d_slot_%d_thr%d_cutOn%f", fBarrelMap.getLayerNumber(*layer.second), slots[i], thr, TOTcuts[j]);
+				histo_title = Form("%s;#DeltaT [ns]", histo_name);
+				getStatistics().createHistogram( new TH1F(histo_name, histo_title, 500,-20.0, 0.0));
+				}
+*/				
+				histo_name = Form("#DeltaT_vs_TOT_layer_%d_slot_%d_thr%d_side_A_noCoin", fBarrelMap.getLayerNumber(*layer.second), slots[i], thr);
+				histo_title = Form("%s;TOT [ns];#DeltaT [ns]", histo_name);
+				getStatistics().createHistogram( new TH2F(histo_name, histo_title, 600, 0.0, 60.0, 500, -20, 0));
+
+				histo_name = Form("#DeltaT_vs_1/TOT_layer_%d_slot_%d_thr%d_side_A_noCoin", fBarrelMap.getLayerNumber(*layer.second), slots[i], thr);
+				histo_title = Form("%s;1/TOT [ns];#DeltaT [ns]", histo_name);
+				getStatistics().createHistogram( new TH2F(histo_name, histo_title, 1000, 0.0, 0.2, 500, -20, 0));
 			}
 		}
 	}
@@ -85,13 +137,42 @@ void TaskE::fillCoincidenceHistos(const vector<JPetHit>& hits){
 						);
 						tof /= 1000.; // [ns]
 						// check coincidence window
-						if( tof < 50.0 ){
+						//if( tof < 50.0 ){
+						if( true ){
 							// study the coincidence and fill histograms
 							int delta_ID = fBarrelMap.calcDeltaID(hit1, hit2);
-							fillDeltaIDhisto(delta_ID, thr, hit1.getBarrelSlot().getLayer());
-							fillTOFvsDeltaIDhisto(delta_ID, thr, hit1, hit2);
+							//fillDeltaIDhisto(delta_ID, thr, hit1.getBarrelSlot().getLayer());
+							//fillTOFvsDeltaIDhisto(delta_ID, thr, hit1, hit2);
 							// fill TOT vs TOT histos
-							fillTOTvsTOThisto(delta_ID, thr, hit1, hit2);
+							//fillTOTvsTOThisto(delta_ID, thr, hit1, hit2);
+							for(unsigned int i = 0; i < slots.size(); i++){
+/*
+							if( slots[i] == hit1.getBarrelSlot().getID()  ){
+								fillTOTnoCoin(delta_ID, thr, hit1, 'A');
+							}
+							if( slots[i] == hit1.getBarrelSlot().getID()  ){
+								fillTOTwithCoin(delta_ID, thr, hit1, 'A');
+							}
+							if( slots[i] == hit2.getBarrelSlot().getID()  ){
+								fillTOTnoCoin(delta_ID, thr, hit2, 'A');
+							}
+							if( slots[i] == hit2.getBarrelSlot().getID()  ){
+								fillTOTwithCoin(delta_ID, thr, hit2, 'A');
+							}
+							if( slots[i] == hit1.getBarrelSlot().getID()  ){
+								fillDeltaT(delta_ID, thr, hit1);
+							}
+							if( slots[i] == hit2.getBarrelSlot().getID()  ){
+								fillDeltaT(delta_ID, thr, hit2);
+							}
+*/
+							if( slots[i] == hit1.getBarrelSlot().getID() ){
+								fillDeltaTvsTOT(thr, hit1);
+							}
+							if( slots[i] == hit2.getBarrelSlot().getID() ){
+								fillDeltaTvsTOT(thr, hit2);
+							}
+							}
 						}
 					}
 				}
@@ -131,13 +212,29 @@ void TaskE::fillTOFvsDeltaIDhisto(int delta_ID, int thr, const JPetHit & hit1, c
 	
 	getStatistics().getHisto2D(histo_name).Fill(delta_ID, tof);
 }
+
+
 bool TaskE::isGoodTimeDiff(const JPetHit & hit, int thr){
 	double mean_timediff = getAuxilliaryData().getValue("timeDiffAB mean values",
 							    formatUniqueSlotDescription(hit.getBarrelSlot(),
 								    thr, "timeDiffAB_")
 	);
 	double this_hit_timediff = JPetHitUtils::getTimeDiffAtThr(hit, thr) / 1000.; // [ns]
-	return( fabs( this_hit_timediff - mean_timediff ) < 1.0 );
+	return( fabs( this_hit_timediff - mean_timediff ) < 2.4 );
+}
+
+void TaskE::fillDeltaTvsTOT( int thr, const JPetHit& hit)
+{
+	double tot = hit.getSignalA().getRecoSignal().getRawSignal().getTOTsVsThresholdNumber().at(thr) / 1000.0;
+	double timediff = JPetHitUtils::getTimeDiffAtThr(hit, thr) / 1000.0;
+
+	char* histo_name = Form("#DeltaT_vs_TOT_layer_%d_slot_%d_thr%d_side_A_noCoin", fBarrelMap.getLayerNumber(hit.getBarrelSlot().getLayer()), hit.getBarrelSlot().getID(), thr);
+	getStatistics().getHisto2D(histo_name).Fill(tot, timediff);
+
+	
+	histo_name = Form("#DeltaT_vs_1/TOT_layer_%d_slot_%d_thr%d_side_A_noCoin", fBarrelMap.getLayerNumber(hit.getBarrelSlot().getLayer()), hit.getBarrelSlot().getID(), thr);
+	getStatistics().getHisto2D(histo_name).Fill(1.0/tot, timediff);
+
 }
 
 void TaskE::fillTOTvsTOThisto(int delta_ID, int thr, const JPetHit & hit1, const JPetHit & hit2){
@@ -159,5 +256,57 @@ void TaskE::fillTOTvsTOThisto(int delta_ID, int thr, const JPetHit & hit1, const
 			  fBarrelMap.getLayerNumber(hit1.getBarrelSlot().getLayer()), thr);  
 	getStatistics().getHisto2D(histo_name).Fill(totB1/1000., totB2/1000.);
 	
+}
+void TaskE::fillTOTnoCoin(int delta_ID, int thr,const JPetHit& hit,char side)
+{
+	int n_slots_in_half_layer = fBarrelMap.getNumberOfSlots(hit.getBarrelSlot().getLayer()) / 2;
+//	if( delta_ID != n_slots_in_half_layer )return; // skip non-opposite coincidences
+	double tot = hit.getSignalA().getRecoSignal().getRawSignal().getTOTsVsThresholdNumber().at(thr);
+	char* histo_name;
+	switch(side){
+		case 'A':
+			histo_name = Form("TOT_layer_%d_slot_%d_thr%d_side_A_noCoin", fBarrelMap.getLayerNumber(hit.getBarrelSlot().getLayer()), hit.getBarrelSlot().getID(), thr);
+			getStatistics().getHisto1D(histo_name).Fill(tot/1000.);
+			break;
+		case 'B':
+			histo_name = Form("TOT_layer_%d_slot_%d_thr%d_side_B", fBarrelMap.getLayerNumber(hit.getBarrelSlot().getLayer()), 0, thr);
+			getStatistics().getHisto1D(histo_name).Fill(tot/1000.);
+			break;
+	}
+	
+}
+
+void TaskE::fillTOTwithCoin(int delta_ID, int thr,const JPetHit& hit,char side)
+{
+        int n_slots_in_half_layer = fBarrelMap.getNumberOfSlots(hit.getBarrelSlot().getLayer()) / 2;
+	if( delta_ID != n_slots_in_half_layer )return; // skip non-opposite coincidences
+        double tot = hit.getSignalA().getRecoSignal().getRawSignal().getTOTsVsThresholdNumber().at(thr);
+        char* histo_name;
+        switch(side){
+                case 'A':
+                        histo_name = Form("TOT_layer_%d_slot_%d_thr%d_side_A_coin", fBarrelMap.getLayerNumber(hit.getBarrelSlot().getLayer()), hit.getBarrelSlot().getID(), thr);
+                        getStatistics().getHisto1D(histo_name).Fill(tot/1000.);
+                        break;
+                case 'B':
+                        histo_name = Form("TOT_layer_%d_slot_%d_thr%d_side_B", fBarrelMap.getLayerNumber(hit.getBarrelSlot().getLayer()), hit.getBarrelSlot().getID(), thr);
+                        getStatistics().getHisto1D(histo_name).Fill(tot/1000.);
+                        break;
+        }
+
+}
+
+void TaskE::fillDeltaT(int delta_ID, int thr,const JPetHit& hit)
+{
+//        int n_slots_in_half_layer = fBarrelMap.getNumberOfSlots(hit.getBarrelSlot().getLayer()) / 2;
+//        if( delta_ID != n_slots_in_half_layer )return; // skip non-opposite coincidences
+	double tot = hit.getSignalA().getRecoSignal().getRawSignal().getTOTsVsThresholdNumber().at(thr)/1000.0;
+	for(unsigned int j = 0; j < TOTcuts.size(); j++){
+		if( !( tot > TOTcuts[j] ) ) continue;
+		double timediff = JPetHitUtils::getTimeDiffAtThr(hit, thr) / 1000.;
+	        char* histo_name;
+        	histo_name = Form("#DeltaT_layer_%d_slot_%d_thr%d_cutOn%f", fBarrelMap.getLayerNumber(hit.getBarrelSlot().getLayer()), hit.getBarrelSlot().getID(), thr, TOTcuts[j]);
+	        getStatistics().getHisto1D(histo_name).Fill( timediff );
+        }
+
 }
 void TaskE::setWriter(JPetWriter* writer){fWriter =writer;}

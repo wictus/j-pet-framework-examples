@@ -18,6 +18,7 @@
 #include <JPetHit/JPetHit.h>
 #include <JPetRawSignal/JPetRawSignal.h>
 #include "LargeBarrelMapping.h"
+#include <vector>
 class JPetWriter;
 #ifdef __CINT__
 //when cint is used instead of compiler, override word is not recognized
@@ -39,9 +40,16 @@ protected:
 	void fillTOFvsDeltaIDhisto(int delta_ID, int threshold, const JPetHit & hit1, const JPetHit & hit2);
 	bool isGoodTimeDiff(const JPetHit & hit, int thr);
 	void fillTOTvsTOThisto(int delta_ID, int thr, const JPetHit & hit1, const JPetHit & hit2);
+	void fillTOTnoCoin(int delta_ID, int thr,const JPetHit& hit,char side);
+	void fillTOTwithCoin(int delta_ID, int thr,const JPetHit& hit,char side);
+	void fillDeltaT(int delta_ID, int thr,const JPetHit& hit);
+	void setSlotsAndCuts();
+	void fillDeltaTvsTOT( int thr, const JPetHit& hit);
 private:
 	LargeBarrelMapping fBarrelMap;
 	std::vector<JPetHit> fHits;
 	JPetWriter* fWriter;
+	std::vector<int> slots;
+	std::vector<double> TOTcuts;
 };
 #endif /*  !TASKE_H */
