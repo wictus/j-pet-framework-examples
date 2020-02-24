@@ -63,6 +63,16 @@ protected:
 	static JPetSigCh generateSigCh(
 		double time, const JPetChannel& channel, JPetSigCh::EdgeType edge
 	);
+
+  //      scin           side                  pos_in_matrix  thr     
+  std::map<int,
+	   std::map<JPetPM::Side,
+		    std::map<int,
+			     std::map<int,
+				      std::map<JPetSigCh::EdgeType,
+					       std::vector<float>> > > > > times;
+
+
 };
 
 #endif /* !TIMEWINDOWCREATOR_H */
