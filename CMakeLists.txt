@@ -189,3 +189,4 @@ add_subdirectory(modules)
 #add_subdirectory(UserDataClassExample)
 
 add_subdirectory(ModularDetectorAnalysis)
+add_subdirectory(Clustering)
