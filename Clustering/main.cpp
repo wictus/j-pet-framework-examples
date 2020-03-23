@@ -29,7 +29,7 @@ int main(int argc, const char* argv[]) {
     // manager.registerTask<EventFinder>("EventFinder");
     // manager.registerTask<EventCategorizer>("EventCategorizer");
     //
-    manager.useTask("TimeWindowCreator", "hld", "ana");
+    manager.useTask("TimeWindowCreator", "hld", "clu");
     //    manager.useTask("SignalFinder", "tslot.calib", "raw.sig");
     // manager.useTask("SignalTransformer", "raw.sig", "phys.sig");
     // manager.useTask("HitFinder", "phys.sig", "hits");

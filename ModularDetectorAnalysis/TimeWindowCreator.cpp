@@ -109,7 +109,7 @@ bool TimeWindowCreator::init()
 					   220, 2090.5, 2310.5
 					   ));
 
-  for(int i=0;i<13;++i){
+  for(int i=0;i<=4*13;++i){
     getStatistics().createHistogram(new TH1F(Form("dt_scin_%d", i+1),
 					     Form("Time diff scin %d; dt [ns]", i+1),
 					     100, -15., 15.
@@ -152,7 +152,7 @@ bool TimeWindowCreator::init()
 
   // PM-PM coincidences in a single matrix, each possible combination
   for(int side=1; side <= 2; ++side){
-    for(int scin=1; scin <= 13; ++scin){
+    for(int scin=1; scin <= 4*13; ++scin){
       for(int thr=1; thr<=2; ++thr){
 	for(int i=1; i<=4; ++i){
 	  for(int j=i+1; j<=4; ++j){
@@ -200,7 +200,7 @@ bool TimeWindowCreator::exec()
       }
 
       // Skip trigger signals - every 105th
-      //      if (channelNumber % 105 == 0) continue;
+      if (channelNumber % 105 == 104) continue;
 
       // Check if channel exists in database from loaded local file
       if (getParamBank().getChannels().count(channelNumber) == 0) {
