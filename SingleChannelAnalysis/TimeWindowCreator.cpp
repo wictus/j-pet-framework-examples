@@ -135,6 +135,13 @@ bool TimeWindowCreator::init()
   getStatistics().createHistogram(
                                   new TH1F("h_lead_trail_b", "Leads - trails, thr B;N_{LEAD} - N_{TRAIL}", 5, -2.5, 2.5)
                                   );
+
+  getStatistics().createHistogram(
+                                  new TH1F("h_lead_trail_largetot_a", "Leads - trails, thr A;N_{LEAD} - N_{TRAIL}", 5, -2.5, 2.5)
+                                  );
+  getStatistics().createHistogram(
+                                  new TH1F("h_lead_trail_largetot_b", "Leads - trails, thr B;N_{LEAD} - N_{TRAIL}", 5, -2.5, 2.5)
+                                  );
   
   // Control histograms
   if (fSaveControlHistos) { initialiseHistograms(); }
@@ -290,15 +297,37 @@ bool TimeWindowCreator::exec()
         }
 
         // check TOTs
+        bool good_tot_a = false;
+        bool good_tot_b = false;
+
         if(thr_a_leads.size() == 1 && thr_a_trails.size() == 1 ){
           double tot = (thr_a_trails.front() - thr_a_leads.front()) / 1000.;
           getStatistics().getHisto1D("h_tot_a")->Fill(tot);
+          if( tot > 10.0 ){
+            good_tot_a = true;
+          }
         }
         if(thr_b_leads.size() == 1 && thr_b_trails.size() == 1 ){
           double tot = (thr_b_trails.front() - thr_b_leads.front()) / 1000.;
           getStatistics().getHisto1D("h_tot_b")->Fill(tot);
+          if( tot > 10.0 ){
+            good_tot_b = true;
+          }
         }
 
+        // fill (leads-trails) histos again but only for the case
+        // when the other threshold had a good TOT
+        if(good_tot_a){
+          if(thr_b_trails.size() > 0 || thr_b_leads.size() > 0 ){
+            getStatistics().getHisto1D("h_lead_trail_largetot_b")->Fill(thr_b_leads.size() - thr_b_trails.size());
+          } 
+        }
+        if(good_tot_b){
+          if(thr_a_trails.size() > 0 || thr_a_leads.size() > 0 ){
+            getStatistics().getHisto1D("h_lead_trail_largetot_a")->Fill(thr_a_leads.size() - thr_a_trails.size());
+          } 
+        }
+        
         // check subsequent times
         if(thr_a_leads.size() == 2){
           double dt = (thr_a_leads.at(1) - thr_a_leads.at(0)) / 1000.;

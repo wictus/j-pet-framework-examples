@@ -557,7 +557,7 @@ bool TimeWindowCreator::exec()
         double t_a = 0.5*(hits[0][scin][pm].at(0) + hits[1][scin][pm].at(0));
         double t_b = 0.5*(hits[0][scin][pm].at(1) + hits[1][scin][pm].at(1));
 
-        if( fabs(dt_a - mean_a) < 2.0 && fabs(dt_b - mean_b) < 2.0
+        if( fabs(dt_a - mean_a) < 3.0 && fabs(dt_b - mean_b) < 3.0
             && fabs(t_a - t_b) < 2.0
             ){
           was_tag = true;
