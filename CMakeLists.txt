@@ -191,4 +191,5 @@ add_subdirectory(modules)
 add_subdirectory(ModularDetectorAnalysis)
 add_subdirectory(Clustering)
 add_subdirectory(SingleChannelAnalysis)
+add_subdirectory(RefDet)
 
