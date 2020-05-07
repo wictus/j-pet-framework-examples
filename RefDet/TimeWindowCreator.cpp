@@ -388,9 +388,10 @@ bool TimeWindowCreator::exec()
     std::vector<std::pair<double, double>> tag_times;
     
     // look for tags on the reference detector
-    times thr_a_leads = all_sigchs[0][20][1][1][0]; 
-    times thr_a_trails = all_sigchs[0][20][1][1][1]; 
-    times thr_b_leads = all_sigchs[0][20][1][2][0]; 
+    times thr_a_leads = all_sigchs[0][6][4][1][0]; 
+    times thr_a_trails = all_sigchs[0][6][4][1][1]; 
+    times thr_b_leads = all_sigchs[0][6][4][2][0]; 
+    times thr_b_trails = all_sigchs[0][6][4][2][1]; 
     getStatistics().getHisto1D("ref_n_hits")->Fill(thr_a_leads.size());
 
     if( thr_a_leads.size() == 0 ){ // no chance for coincidence
@@ -398,16 +399,23 @@ bool TimeWindowCreator::exec()
     }
 
     for(int k=0;k<thr_a_leads.size() && k<thr_b_leads.size(); ++k){
-      double tot = 1.e6;
+      double tot_a = 1.e6;
+      double tot_b = 1.e6;
       if(thr_a_leads.size() == thr_a_trails.size()){
-        tot = (thr_a_trails.at(k) - thr_a_leads.at(k)) / 1000.;
+        tot_a = (thr_a_trails.at(k) - thr_a_leads.at(k)) / 1000.;
       }
-      getStatistics().getHisto1D("ref_tot")->Fill(tot);
-      tag_times.push_back(std::make_pair(thr_a_leads.at(k) / 1000., tot));
+      if(thr_b_leads.size() == thr_b_trails.size()){
+        tot_b = (thr_b_trails.at(k) - thr_b_leads.at(k)) / 1000.;
+      }
+      getStatistics().getHisto1D("ref_tot")->Fill(tot_a);
+      if(tot_a > 10.0 && tot_b > 10.0){
+        tag_times.push_back(std::make_pair(thr_a_leads.at(k) / 1000., tot_a));
+      }
     }
         
     // fill single-channel time diffs in case there was a tag on the "far" side
-    for(int scin=1;scin<=13;++scin){
+    //    for(int scin=1;scin<=13;++scin){
+    for(int scin=7;scin<=7;++scin){
       for(int pm = 1; pm <= 4; ++pm){
         
         if(hits[0][scin][pm].size() != 2 || hits[1][scin][pm].size() != 2){
