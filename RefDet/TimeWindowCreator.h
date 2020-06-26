@@ -72,7 +72,10 @@ protected:
 				      std::map<JPetSigCh::EdgeType,
 					       std::vector<float>> > > > > times;
 
-
+  std::map<int,
+	   std::map<JPetPM::Side,
+		    std::map<int,double>>> fTOTmedianCuts;
+  
 };
 
 #endif /* !TIMEWINDOWCREATOR_H */

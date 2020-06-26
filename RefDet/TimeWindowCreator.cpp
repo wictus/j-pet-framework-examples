@@ -98,6 +98,9 @@ bool TimeWindowCreator::init()
 					   10000, 0., 150.
 					   ));
 
+  getStatistics().createHistogram(new TH2F("n_good_tots", "Signals with good TOT;thr A;thr B",
+                                           5, -0.5, 4.5, 5, -0.5, 4.5));
+  
   getStatistics().createHistogram(new TH1F("ref_tot_coin",
 					   "TOT on RefDet in coinc."
 					   ";TOT [ns]",
@@ -157,64 +160,103 @@ bool TimeWindowCreator::init()
   getStatistics().createHistogram(new TH1F("cluster_size", "Cluster size (no. PMs)", 5, -0.5, 4.5));
   
   // time differences for different time calculation variants
-  for(int scin=1; scin <= 13; ++scin){
-                                                 
+  for(int scin=1; scin <= 13; scin+=12){                                                
     for(int pm=1; pm<=4; ++pm){
       getStatistics().createHistogram(new TH1F(Form("dt_1pm_a_scin_%d_pm_%d",
                                                     scin, pm), "Dt;#Delta t [ns]",
-                                               200, -20., 20.
+                                               400, -20., 20.
+                                               )
+                                      );
+
+      getStatistics().createHistogram(new TH1F(Form("dt_totcut_1pm_a_scin_%d_pm_%d",
+                                                    scin, pm), "Dt;#Delta t [ns]",
+                                               400, -20., 20.
                                                )
                                       );
       
       getStatistics().createHistogram(new TH1F(Form("dt_1pm_b_scin_%d_pm_%d",
                                                     scin, pm), "Dt;#Delta t [ns]",
-                                               200, -20., 20.
+                                               400, -20., 20.
                                                )
                                       );
       
-      getStatistics().createHistogram(new TH1F(Form("dt_tag_1pm_a_scin_%d_pm_%d",
+      getStatistics().createHistogram(new TH1F(Form("dt_coinc_1pm_a_scin_%d_pm_%d",
                                                     scin, pm), "Dt;#Delta t [ns]",
-                                               200, -20., 20.
+                                               400, -20., 20.
                                                )
                                             );
       
-      getStatistics().createHistogram(new TH1F(Form("dt_tag_1pm_b_scin_%d_pm_%d",
+      getStatistics().createHistogram(new TH1F(Form("dt_coinc_1pm_b_scin_%d_pm_%d",
                                                     scin, pm), "Dt;#Delta t [ns]",
-                                               200, -20., 20.
+                                               400, -20., 20.
                                                )
                                       );
       
 
       // histos of TOT for each channel separately
-      getStatistics().createHistogram(new TH1F(Form("tot_scin_%d_pm_%d_thr_A",
+      getStatistics().createHistogram(new TH1F(Form("tot_side_0_scin_%d_pm_%d_thr_A",
                                                     scin, pm), "TOT;TOT [ns]",
-                                               260, 0., 130.
+                                               100, 0., 200.
+                                               )
+                                      );
+      getStatistics().createHistogram(new TH1F(Form("tot_side_1_scin_%d_pm_%d_thr_A",
+                                                    scin, pm), "TOT;TOT [ns]",
+                                               100, 0., 200.
                                                )
                                       );
 
-      getStatistics().createHistogram(new TH1F(Form("tot_scin_%d_pm_%d_thr_B",
+      getStatistics().createHistogram(new TH1F(Form("tot_side_0_scin_%d_pm_%d_thr_B",
                                                     scin, pm), "TOT;TOT [ns]",
-                                               260, 0., 130.
+                                               100, 0., 200.
+                                               )
+                                      );
+      
+      getStatistics().createHistogram(new TH1F(Form("tot_side_1_scin_%d_pm_%d_thr_B",
+                                                    scin, pm), "TOT;TOT [ns]",
+                                               100, 0., 200.
                                                )
                                       );
 
-      getStatistics().createHistogram(new TH1F(Form("tot_coinc_scin_%d_pm_%d_thr_A",
+      getStatistics().createHistogram(new TH1F(Form("tot_coinc_side_0_scin_%d_pm_%d_thr_A",
                                                     scin, pm), "TOT;TOT [ns]",
-                                               260, 0., 130.
+                                               100, 0., 200.
+                                               )
+                                      );
+      getStatistics().createHistogram(new TH1F(Form("tot_coinc_side_1_scin_%d_pm_%d_thr_A",
+                                                    scin, pm), "TOT;TOT [ns]",
+                                               100, 0., 200.
                                                )
                                       );
 
-      getStatistics().createHistogram(new TH1F(Form("tot_coinc_scin_%d_pm_%d_thr_B",
+      getStatistics().createHistogram(new TH1F(Form("tot_coinc_side_0_scin_%d_pm_%d_thr_B",
                                                     scin, pm), "TOT;TOT [ns]",
-                                               260, 0., 130.
+                                               100, 0., 200.
                                                )
                                       );
+      
+      getStatistics().createHistogram(new TH1F(Form("tot_coinc_side_1_scin_%d_pm_%d_thr_B",
+                                                    scin, pm), "TOT;TOT [ns]",
+                                               100, 0., 200.
+                                               )
+                                      );
+
       
     }
   }
 
   getStatistics().createHistogram(new TH1F("Inter-module Dt", "Inter-module Dt;#Delta t [ns]",
                                            100000, -50000, 50000));
+
+  getStatistics().createHistogram(new TH1F("inter-thr tdiff", "Inter-thredhold Dt;#Delta t [ns]",
+                                           30000, -15, 15));
+
+  for(int pm=1;pm<5;++pm){
+    getStatistics().createHistogram(new TH2F(Form("dt_vs_dt_pm_%d", pm),
+                                             Form("Dt scin 1 vs Dt scin 13, pm %d", pm),
+                                             400, -20., 20.,
+                                             400, -20., 20.
+                                             ));
+  }
   
   // Control histograms
   if (fSaveControlHistos) { initialiseHistograms(); }
@@ -335,14 +377,54 @@ bool TimeWindowCreator::exec()
     /**************************************************************************/
     /* Actual clustering                                                      */
     /**************************************************************************/
-    using hitsByPM = array<times,5>;
+    using timesAndTOTs = vector<pair<double,double>>; // (lead time, TOT)
+    using hitsByPM = array<timesAndTOTs,5>;
     using hitsByScin = array<hitsByPM,28>;
     using hitsBySide = array<hitsByScin,2>;    
 
     hitsBySide hits;
+
+    // define TOT cuts
+    array<array<array<array<double,2>,5>,28>,2> tot_cuts;
+    tot_cuts[0][13][1][0] = 80;
+    tot_cuts[0][13][1][1] = 70;
+    tot_cuts[0][13][2][0] = 90;
+    tot_cuts[0][13][2][1] = 90;
+    tot_cuts[0][13][3][0] = 60;
+    tot_cuts[0][13][3][1] = 60;
+    tot_cuts[0][13][4][0] = 70;
+    tot_cuts[0][13][4][1] = 60;
+
+    tot_cuts[1][13][1][0] = 100;
+    tot_cuts[1][13][1][1] = 90;
+    tot_cuts[1][13][2][0] = 100;
+    tot_cuts[1][13][2][1] = 110;
+    tot_cuts[1][13][3][0] = 110;
+    tot_cuts[1][13][3][1] = 130;
+    tot_cuts[1][13][4][0] = 100;
+    tot_cuts[1][13][4][1] = 120;
+
+    tot_cuts[0][1][1][0] = 70;
+    tot_cuts[0][1][1][1] = 80;
+    tot_cuts[0][1][2][0] = 80;
+    tot_cuts[0][1][2][1] = 80;
+    tot_cuts[0][1][3][0] = 90;
+    tot_cuts[0][1][3][1] = 70;
+    tot_cuts[0][1][4][0] = 90;
+    tot_cuts[0][1][4][1] = 80;
+
+    tot_cuts[1][1][1][0] = 100;
+    tot_cuts[1][1][1][1] = 100;
+    tot_cuts[1][1][2][0] = 60;
+    tot_cuts[1][1][2][1] = 60;
+    tot_cuts[1][1][3][0] = 40;
+    tot_cuts[1][1][3][1] = 40;
+    tot_cuts[1][1][4][0] = 40;
+    tot_cuts[1][1][4][1] = 40;
+
     
     for(int side=0;side<=1;++side){
-      for(int scin=1;scin<=13;++scin){
+      for(int scin=1;scin<=13;scin+=12){
 
         for(int pm = 1; pm <= 4; ++pm){
         
@@ -352,127 +434,145 @@ bool TimeWindowCreator::exec()
 	  times thr_a_trails = all_sigchs[side][scin][pm][1][1]; 
 	  times thr_b_trails = all_sigchs[side][scin][pm][2][1]; 
 
-
-
-          if(scin <= 13){
-            if( thr_a_leads.size() != 1 ||
-                thr_b_leads.size() != 1 ||
-                thr_a_trails.size() != 1 ||
-                thr_b_trails.size() != 1
-                ){
-              continue;
+          // check reasonable TOT on A
+          std::vector<std::pair<double, double>> sigs_a;
+          for(double t_a_l : thr_a_leads){
+            for(double t_a_t : thr_a_trails){
+              double dt = (t_a_t - t_a_l) / 1000.;
+              if( dt > 0. && dt < 200. ){ // reasonable single-threshold TOT
+                sigs_a.push_back(std::make_pair(t_a_l / 1000., dt));
+              }
+              getStatistics().getHisto1D(Form("tot_side_%d_scin_%d_pm_%d_thr_A", side, scin, pm))->Fill(dt);
             }
           }
-          
-          double tot_a = thr_a_trails.front() - thr_a_leads.front();
-          double tot_b = thr_b_trails.front() - thr_b_leads.front();
-
-          if(scin <= 13){
-            getStatistics().getHisto1D(Form("tot_scin_%d_pm_%d_thr_A", scin, pm))->Fill(tot_a/1000.);
-            getStatistics().getHisto1D(Form("tot_scin_%d_pm_%d_thr_B", scin, pm))->Fill(tot_b/1000.);
+       
+          // check reasonable TOT on B
+          std::vector<std::pair<double, double>> sigs_b;
+          for(double t_b_l : thr_b_leads){
+            for(double t_b_t : thr_b_trails){
+              double dt = (t_b_t - t_b_l) / 1000.;
+              if( dt > 0. && dt < 200. ){ // reasonable single-threshold TOT
+                sigs_b.push_back(std::make_pair(t_b_l / 1000., dt));
+              }
+              getStatistics().getHisto1D(Form("tot_side_%d_scin_%d_pm_%d_thr_B", side, scin, pm))->Fill(dt);
+            }
           }
+                    
+          getStatistics().getHisto2D("n_good_tots")->Fill(sigs_a.size(), sigs_b.size());
 
-          // time coincidence within 6 ns
-          if( fabs(thr_a_leads.front() - thr_b_leads.front()) < 6000. ){
-            
-            hits[side][scin][pm].push_back(thr_a_leads.front() / 1000. );
-            hits[side][scin][pm].push_back(thr_b_leads.front() / 1000.);
-            
+          for(auto& tta : sigs_a){
+            for(auto& ttb : sigs_b){
+              double dt = tta.first - ttb.first;
+              getStatistics().getHisto1D("inter-thr tdiff")->Fill(dt);
+              if(fabs(dt) < 4.0){
+                hits[side][scin][pm].push_back(tta);
+              }
+            } 
           }
-
+         
 	}
       }
     }
- 
-    bool was_tag = false;
-    std::vector<std::pair<double, double>> tag_times;
+
+    /**********************************************************************/
+    /* Look for coincidences between sides on a single strip              */
+    /**********************************************************************/
+    using allHitInfo=vector<array<double,5>>; // (t_hit, t_left, t_tight, TOT_left, TOT_right)
+    array<allHitInfo,5> scin_1_hits;
+    array<allHitInfo,5> scin_13_hits;
     
-    // look for tags on the reference detector
-    times thr_a_leads = all_sigchs[0][6][4][1][0]; 
-    times thr_a_trails = all_sigchs[0][6][4][1][1]; 
-    times thr_b_leads = all_sigchs[0][6][4][2][0]; 
-    times thr_b_trails = all_sigchs[0][6][4][2][1]; 
-    getStatistics().getHisto1D("ref_n_hits")->Fill(thr_a_leads.size());
-
-    if( thr_a_leads.size() == 0 ){ // no chance for coincidence
-      return true;
-    }
-
-    for(int k=0;k<thr_a_leads.size() && k<thr_b_leads.size(); ++k){
-      double tot_a = 1.e6;
-      double tot_b = 1.e6;
-      if(thr_a_leads.size() == thr_a_trails.size()){
-        tot_a = (thr_a_trails.at(k) - thr_a_leads.at(k)) / 1000.;
-      }
-      if(thr_b_leads.size() == thr_b_trails.size()){
-        tot_b = (thr_b_trails.at(k) - thr_b_leads.at(k)) / 1000.;
-      }
-      getStatistics().getHisto1D("ref_tot")->Fill(tot_a);
-      if(tot_a > 10.0 && tot_b > 10.0){
-        tag_times.push_back(std::make_pair(thr_a_leads.at(k) / 1000., tot_a));
-      }
-    }
-        
-    // fill single-channel time diffs in case there was a tag on the "far" side
-    //    for(int scin=1;scin<=13;++scin){
-    for(int scin=7;scin<=7;++scin){
+    for(int scin=1;scin<=13;scin+=12){
       for(int pm = 1; pm <= 4; ++pm){
-        
-        if(hits[0][scin][pm].size() != 2 || hits[1][scin][pm].size() != 2){
-          continue;
-        }
-
-        double t_a = 0.5*(hits[0][scin][pm].at(0) + hits[1][scin][pm].at(0));
-        double dt = hits[0][scin][pm].at(0) - hits[1][scin][pm].at(0);       
-        
-        getStatistics().getHisto1D(Form("dt_1pm_a_scin_%d_pm_%d",
-                                        scin, pm))->Fill(dt);
-        
-        for(auto& tt: tag_times){
-
-          double t = tt.first;
-          double tot = tt.second;
+        for(auto& tt_left: hits[0][scin][pm]){
+          for(auto& tt_right: hits[1][scin][pm]){
           
-          getStatistics().getHisto1D("Inter-module Dt")->Fill(t_a - t);
+            double dt = tt_right.first - tt_left.first;
+            getStatistics().getHisto1D(Form("dt_1pm_a_scin_%d_pm_%d",
+                                            scin, pm))->Fill(dt);          
 
-          if( fabs(t_a - t + 30.0) < 10.0 ){ // we had a coincidence with a tag
+            // fill dt after TOT cut
+            double tot_left = tt_left.second;
+            double tot_right = tt_right.second;
+            if( tot_left > tot_cuts[0][scin][pm][0] / 2. && tot_left < tot_cuts[0][scin][pm][0] &&
+                tot_right > tot_cuts[1][scin][pm][0] / 2. && tot_right < tot_cuts[1][scin][pm][0]
+                ){
+              getStatistics().getHisto1D(Form("dt_totcut_1pm_a_scin_%d_pm_%d",
+                                              scin, pm))->Fill(dt);          
+            }
             
-            // fill Dt in coincidence            
+            double t = 0.5*(tt_right.first + tt_left.first); // hit time
 
-            getStatistics().getHisto1D(Form("dt_tag_1pm_a_scin_%d_pm_%d",
-                                          scin, pm))->Fill(dt);        
-            dt = hits[0][scin][pm].at(1) - hits[1][scin][pm].at(1);
-            getStatistics().getHisto1D(Form("dt_tag_1pm_b_scin_%d_pm_%d",
-                                          scin, pm))->Fill(dt);;
-
-            getStatistics().getHisto1D("ref_tot_coin")->Fill(tot);
-            
-            // fill TOT in coincidence
-            for(int side=0;side<=1;++side){
-              times thr_a_leads = all_sigchs[side][scin][pm][1][0]; 
-              times thr_b_leads = all_sigchs[side][scin][pm][2][0]; 
-              
-              times thr_a_trails = all_sigchs[side][scin][pm][1][1]; 
-              times thr_b_trails = all_sigchs[side][scin][pm][2][1]; 
-            
-              if( !(thr_a_leads.size() != 1 ||
-                    thr_b_leads.size() != 1 ||
-                    thr_a_trails.size() != 1 ||
-                    thr_b_trails.size() != 1) ){
-                double tot_a = thr_a_trails.front() - thr_a_leads.front();
-                double tot_b = thr_b_trails.front() - thr_b_leads.front();              
-              
-                getStatistics().getHisto1D(Form("tot_coinc_scin_%d_pm_%d_thr_A", scin, pm))->Fill(tot_a/1000.);
-                getStatistics().getHisto1D(Form("tot_coinc_scin_%d_pm_%d_thr_B", scin, pm))->Fill(tot_b/1000.);
+            if( fabs(dt) < 20.0 ){
+              if(scin==1){
+                scin_1_hits[pm].push_back({t, tt_left.first, tt_right.first, tt_left.second, tt_right.second});
               }
-            }     
+              if(scin==13){
+                scin_13_hits[pm].push_back({t, tt_left.first, tt_right.first, tt_left.second, tt_right.second});
+              }
+            }
+            
+            
           }
         }
       }
-      
-      
     }
-    
+
+    // fix for missing signals from side B of scin 1 pm 1
+    for(auto& tt: scin_1_hits[2]){
+      scin_1_hits[1].push_back({tt[0], 0., 0., 0., 0.});
+    }
+      
+    /*********************************************************************/
+    /* Look for coincidences between the strips                          */
+    /*********************************************************************/
+
+    for(int pm_1 = 1; pm_1 <= 4; ++pm_1){
+      for(int pm_13 = 1; pm_13 <= 4; ++pm_13){
+        for(auto& tt_1: scin_1_hits[pm_1]){
+          for(auto& tt_13: scin_13_hits[pm_13]){
+
+            double dt = tt_1[0] - tt_13[0];
+
+            getStatistics().getHisto1D("Inter-module Dt")->Fill(dt);
+
+            if( fabs(dt) < 8.0 ){ // inter-strip coincidence
+
+              // fill strip time diferences in coincidence
+              if(tt_1[4] > fTOTmedianCuts[1][JPetPM::SideB][pm_1] &&
+                 tt_1[3] > fTOTmedianCuts[1][JPetPM::SideA][pm_1]
+                 ){
+                getStatistics().getHisto1D(Form("dt_coinc_1pm_a_scin_%d_pm_%d",
+                                                1, pm_1))->Fill(tt_1[2] - tt_1[1]);
+              }
+              if(tt_13[4] > fTOTmedianCuts[13][JPetPM::SideB][pm_13] &&
+                 tt_13[3] > fTOTmedianCuts[13][JPetPM::SideA][pm_13]
+                 ){
+                getStatistics().getHisto1D(Form("dt_coinc_1pm_a_scin_%d_pm_%d",
+                                                13, pm_13))->Fill(tt_13[2] - tt_13[1]);          
+              }
+
+              // fill Dt vs Dt
+              if(pm_1 == pm_13){
+                getStatistics().getHisto2D(Form("dt_vs_dt_pm_%d", pm_1))->Fill(tt_1[2] - tt_1[1], tt_13[2] - tt_13[1]);
+              }
+              
+              // fill TOT in coincidence
+              getStatistics().getHisto1D(Form("tot_coinc_side_1_scin_%d_pm_%d_thr_A",
+                                              1, pm_1))->Fill(tt_1[4]);
+              getStatistics().getHisto1D(Form("tot_coinc_side_0_scin_%d_pm_%d_thr_A",
+                                              1, pm_1))->Fill(tt_1[3]);
+              getStatistics().getHisto1D(Form("tot_coinc_side_1_scin_%d_pm_%d_thr_A",
+                                              13, pm_13))->Fill(tt_13[4]);
+              getStatistics().getHisto1D(Form("tot_coinc_side_0_scin_%d_pm_%d_thr_A",
+                                              13, pm_13))->Fill(tt_13[3]);
+                            
+            }
+            
+          }
+        }
+      }
+    }
+
     /********************************************************************/
     /* End of my study                                                  */
     /********************************************************************/
@@ -546,6 +646,27 @@ void TimeWindowCreator::saveSigChs(const vector<JPetSigCh>& sigChVec)
 
 void TimeWindowCreator::initialiseHistograms(){
 
+  fTOTmedianCuts[1][JPetPM::SideA][1] = 55.0;
+  fTOTmedianCuts[1][JPetPM::SideA][2] = 55.0;
+  fTOTmedianCuts[1][JPetPM::SideA][3] = 55.0;
+  fTOTmedianCuts[1][JPetPM::SideA][4] = 55.0;
+
+  fTOTmedianCuts[13][JPetPM::SideA][1] = 60.0;
+  fTOTmedianCuts[13][JPetPM::SideA][2] = 65.0;
+  fTOTmedianCuts[13][JPetPM::SideA][3] = 50.0;
+  fTOTmedianCuts[13][JPetPM::SideA][4] = 55.0;
+
+  fTOTmedianCuts[1][JPetPM::SideB][1] = 20.0;
+  fTOTmedianCuts[1][JPetPM::SideB][2] = 20.0;
+  fTOTmedianCuts[1][JPetPM::SideB][3] = 20.0;
+  fTOTmedianCuts[1][JPetPM::SideB][4] = 30.0;
+
+  fTOTmedianCuts[13][JPetPM::SideB][1] = 65.0;
+  fTOTmedianCuts[13][JPetPM::SideB][2] = 65.0;
+  fTOTmedianCuts[13][JPetPM::SideB][3] = 75.0;
+  fTOTmedianCuts[13][JPetPM::SideB][4] = 75.0;
+  
+  
   getStatistics().createHistogram(
     new TH1F("sig_ch_per_time_slot", "Signal Channels Per Time Slot", 50, -0.5, 50.5)
   );
