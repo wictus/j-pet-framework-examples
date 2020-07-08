@@ -346,6 +346,11 @@ bool TimeWindowCreator::exec()
     for(auto& sc: mySigChs){
       
       int scin = sc.getChannel().getPM().getScin().getID() - 200;
+
+      if(scin == 6){
+        scin = 1;
+      }
+
       JPetPM::Side side = sc.getChannel().getPM().getSide();
 
       int pm = sc.getChannel().getPM().getMatrixPosition();
@@ -372,6 +377,7 @@ bool TimeWindowCreator::exec()
       }
 
       all_sigchs[side_no][scin][pm][thr][edge].push_back( time );  
+      
     }
 
     /**************************************************************************/
@@ -464,8 +470,11 @@ bool TimeWindowCreator::exec()
             for(auto& ttb : sigs_b){
               double dt = tta.first - ttb.first;
               getStatistics().getHisto1D("inter-thr tdiff")->Fill(dt);
+              
               if(fabs(dt) < 4.0){
+
                 hits[side][scin][pm].push_back(tta);
+
               }
             } 
           }
@@ -481,7 +490,7 @@ bool TimeWindowCreator::exec()
     array<allHitInfo,5> scin_1_hits;
     array<allHitInfo,5> scin_13_hits;
     
-    for(int scin=1;scin<=13;scin+=12){
+    for(int scin=13;scin<=13;scin+=12){
       for(int pm = 1; pm <= 4; ++pm){
         for(auto& tt_left: hits[0][scin][pm]){
           for(auto& tt_right: hits[1][scin][pm]){
@@ -499,29 +508,36 @@ bool TimeWindowCreator::exec()
               getStatistics().getHisto1D(Form("dt_totcut_1pm_a_scin_%d_pm_%d",
                                               scin, pm))->Fill(dt);          
             }
-            
-            double t = 0.5*(tt_right.first + tt_left.first); // hit time
-
-            if( fabs(dt) < 20.0 ){
-              if(scin==1){
-                scin_1_hits[pm].push_back({t, tt_left.first, tt_right.first, tt_left.second, tt_right.second});
-              }
-              if(scin==13){
+           
+            if(scin==13){
+              double t = 0.5*(tt_right.first + tt_left.first); // hit time
+              if( fabs(dt) < 20.0 ){
                 scin_13_hits[pm].push_back({t, tt_left.first, tt_right.first, tt_left.second, tt_right.second});
               }
             }
-            
             
           }
         }
       }
     }
 
+    
+    // look for tags from scin 1
+    int scin=1;
+    for(int pm = 1; pm <= 4; ++pm){
+      for(auto& tt_left: hits[0][scin][pm]){
+
+        scin_1_hits[pm].push_back({tt_left.first, tt_left.first, tt_left.first, tt_left.second, tt_left.second});
+
+      }
+    }  
     // fix for missing signals from side B of scin 1 pm 1
-    for(auto& tt: scin_1_hits[2]){
-      scin_1_hits[1].push_back({tt[0], 0., 0., 0., 0.});
-    }
-      
+    // for(auto& tt: scin_1_hits[2]){
+    //   scin_1_hits[1].push_back({tt[0], 0., 0., 0., 0.});
+    // }
+
+    
+    
     /*********************************************************************/
     /* Look for coincidences between the strips                          */
     /*********************************************************************/
@@ -535,21 +551,21 @@ bool TimeWindowCreator::exec()
 
             getStatistics().getHisto1D("Inter-module Dt")->Fill(dt);
 
-            if( fabs(dt) < 8.0 ){ // inter-strip coincidence
+            if( fabs(dt) < 16.0 ){ // inter-strip coincidence
 
               // fill strip time diferences in coincidence
-              if(tt_1[4] > fTOTmedianCuts[1][JPetPM::SideB][pm_1] &&
-                 tt_1[3] > fTOTmedianCuts[1][JPetPM::SideA][pm_1]
-                 ){
+              // if(tt_1[4] > fTOTmedianCuts[1][JPetPM::SideB][pm_1] &&
+              //    tt_1[3] > fTOTmedianCuts[1][JPetPM::SideA][pm_1]
+              //    ){
                 getStatistics().getHisto1D(Form("dt_coinc_1pm_a_scin_%d_pm_%d",
                                                 1, pm_1))->Fill(tt_1[2] - tt_1[1]);
-              }
-              if(tt_13[4] > fTOTmedianCuts[13][JPetPM::SideB][pm_13] &&
-                 tt_13[3] > fTOTmedianCuts[13][JPetPM::SideA][pm_13]
-                 ){
+              // }
+              // if(tt_13[4] > fTOTmedianCuts[13][JPetPM::SideB][pm_13] &&
+              //    tt_13[3] > fTOTmedianCuts[13][JPetPM::SideA][pm_13]
+              //    ){
                 getStatistics().getHisto1D(Form("dt_coinc_1pm_a_scin_%d_pm_%d",
                                                 13, pm_13))->Fill(tt_13[2] - tt_13[1]);          
-              }
+              // }
 
               // fill Dt vs Dt
               if(pm_1 == pm_13){
