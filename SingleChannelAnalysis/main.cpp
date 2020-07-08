@@ -15,7 +15,7 @@
 
 #include <JPetManager/JPetManager.h>
 #include "TimeWindowCreator.h"
-#include "SignalFinder.h"
+
 using namespace std;
 
 int main(int argc, const char* argv[]) {
