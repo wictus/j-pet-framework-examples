@@ -34,6 +34,48 @@ double fixTime(double dt){
   return dt - offset * 2.7027;
 }
 
+bool TimeWindowCreator::readMappingForWLS()
+{
+	ifstream inputFile;
+	inputFile.open("mappingVersion1");
+
+	if( !inputFile.is_open() )
+	{
+		ERROR("Problem with opening file: mappingVersion1");
+		return false;
+	}
+
+	string dummy ="";
+	getline(inputFile, dummy);
+	int TDC = 0, threshold = 0, ID = 0;
+	double center = 0;
+	string adress = "";
+	fMappingForWLS.push_back(fTDCtoWLSIDside0);
+	fMappingForWLS.push_back(fTDCtoWLSIDside1);
+	while( inputFile >> TDC >> threshold >> center >> ID >> adress )
+	{
+		int side = 5;
+		if(adress.compare("A130") )
+			side = 0;
+
+		if(adress.compare("A140") )
+			side = 1;		
+
+		if(fMappingForWLS[ side ].find( TDC ) == fMappingForWLS[ side ].end() )
+			fMappingForWLS[ side ][ TDC ] = ID;
+	}
+
+	if(fMappingForWLS[0].size() + fMappingForWLS[1].size() != 64 )
+	{
+		cout << " WLS map size is not equal to 64 \n";
+		ERROR(" WLS map size is not equal to 64 ");
+		return false;
+	}
+
+	inputFile.close();
+	return true;
+}
+
 bool TimeWindowCreator::init()
 {
   INFO("TimeSlot Creation Started");
@@ -129,6 +171,33 @@ bool TimeWindowCreator::init()
                                   new TH1F("h_wls_pm_no", "Responding WLS PM", 64, 0.5, 64.5)
                                   );
 
+  for(int i = 27; i <= 52; i++)
+  {
+  	getStatistics().createHistogram(
+                                  new TH1F( Form("h_wls_pm_no_%d", i), "Responding WLS PM", 64, 0.5, 64.)
+                                  );
+  	getStatistics().createHistogram(
+                                  new TH1F( Form("h_wls_pm_no_%d_cut", i), "Responding WLS PM", 64, 0.5, 64.)
+                                  );
+	std::cout << Form("h_wls_pm_no_%d", i) << std::endl;
+  
+	getStatistics().createHistogram(
+                                  new TH1F( Form("h_wls_pm_pos_%d",i) , "Weighted PM position", 1000, 0., 64.)
+                                  );
+	getStatistics().createHistogram(
+                                  new TH1F( Form("h_wls_pm_pos_%d_cut",i) , "Weighted PM position", 1000, 0., 64.)
+                                  );
+
+  }
+
+  getStatistics().createHistogram( new TH2F( "h_wls_pm_no_vs_mod_scin", "WLS SiPM ID vs Scintillator ID", 26, 27.5, 52.5, 64, 0.5, 64.5) );
+
+  getStatistics().createHistogram( new TH2F( "h_wls_pm_no_vs_mod_scin_cut", "WLS SiPM ID vs Scintillator ID cut from 160 to 240 ns of sum of TOT left-right", 26, 27.5, 52.5, 64, 0.5, 64.5) );
+
+  getStatistics().createHistogram( new TH2F( "h_wls_pm_pos_vs_mod_scin", "WLS SiPM weighted position vs Scintillator ID", 26, 27.5, 52.5, 100, 0., 64.) );
+
+  getStatistics().createHistogram( new TH2F( "h_wls_pm_pos_vs_mod_scin_cut", "WLS SiPM weighted position vs Scintillator ID cut from 160 to 240 ns of sum of TOT left-right", 26, 27.5, 52.5, 100, 0., 64.) );
+
   getStatistics().createHistogram(
                                   new TH1F("h_wls_scin_no_side0", "Responding WLS Scin, side0", 13, 0.5, 13.5)
                                   );
@@ -158,6 +227,10 @@ bool TimeWindowCreator::init()
                                   new TH1F("h_trails_size_b", "Number of thr B trailing edges in TW", 10, -0.5, 9.5)
                                   );
   
+  for(int i = 27; i <= 52; i++)
+  {
+	getStatistics().createHistogram(new TH1F(Form("h_tot_%d_scint", i), "TOT mean from boths thresholds and sum from both sides",  300, 0, 600 ) );
+  }
 
   getStatistics().createHistogram(
                                   new TH1F("h_tot_a", "TOT thr A;TOT [ns]", 4000, -200., 200.)
@@ -230,6 +303,11 @@ bool TimeWindowCreator::init()
   
   // Control histograms
   if (fSaveControlHistos) { initialiseHistograms(); }
+  
+  if( !readMappingForWLS() )
+	  std::cout << " Mapping for WLS not loaded properly \n";
+
+
   return true;
 }
 
@@ -312,7 +390,8 @@ bool TimeWindowCreator::exec()
     using timesBySide = array<timesByScin,2>;
 
     timesBySide all_sigchs;
-    	
+    //make separate signals for WLSs
+
     for(auto& sc: mySigChs){
       
       int scin = sc.getChannel().getPM().getScin().getID() - 200;
@@ -341,6 +420,7 @@ bool TimeWindowCreator::exec()
       }else{
         edge = 1;
       }
+      int channelNb = sc.getChannel().getID();
 
       all_sigchs[side_no][scin][pm][thr][edge].push_back( time );  
       
@@ -411,7 +491,7 @@ bool TimeWindowCreator::exec()
               double dt = (t_a_t - t_a_l) / 1000.;
               if( dt > 0. && dt < 200. ){ // reasonable single-threshold TOT
                 sigs_a.push_back(std::make_pair(t_a_l / 1000.
-                                                , dt));
+                                                , dt ));
               }
               getStatistics().getHisto1D(Form("tot_side_%d_scin_%d_pm_%d_thr_A", side, scin, pm))->Fill(dt);
             }
@@ -423,7 +503,7 @@ bool TimeWindowCreator::exec()
             for(double t_b_t : thr_b_trails){
               double dt = (t_b_t - t_b_l) / 1000.;
               if( dt > 0. && dt < 200. ){ // reasonable single-threshold TOT
-                sigs_b.push_back(std::make_pair(t_b_l / 1000., dt));
+                sigs_b.push_back(std::make_pair(t_b_l / 1000., dt ));
               }
 
             }
@@ -435,11 +515,11 @@ bool TimeWindowCreator::exec()
             for(auto& ttb : sigs_b){
               double dt = tta.first - ttb.first;
               getStatistics().getHisto1D("inter-thr tdiff")->Fill(dt);
-
               
               if(fabs(dt) < 4.0){
-
-                hits[side][scin][pm].push_back(tta);
+		      double time = tta.first;
+		std::pair<double,double> sigs = std::make_pair<>( time, (tta.second + ttb.second)/2.0 ); //time is still on tta, but TOT is a mean from both thresholds
+                hits[side][scin][pm].push_back(sigs);
 
               }
             } 
@@ -507,44 +587,85 @@ bool TimeWindowCreator::exec()
              */
 
              if (fabs(h1[0] - h2[0]) < 20.0) {
-
                // fill Dt plots
                getStatistics().getHisto2D("tag_vs_module_dt")->Fill(h1[2] - h1[1], h2[2] - h2[1]);
-               
-               // tagger - module coincidenceg in the scintillators!
+		getStatistics().getHisto1D(Form("h_tot_%d_scint", mod_scin) )->Fill(h1[3]+h1[4]);
+
+               // tagger - module coincidence in the scintillators!
                coinc_found = true;
                
                // study WLS response coincident with that
 
                std::vector<std::pair<int, double>> wls_pm_coinc;
+		// side = 0 is side B in experiment
 
+	       vector<int> emptySlotsOnSide0, emptySlotsOnSide1;
+	       emptySlotsOnSide0.push_back(1); 
+	       emptySlotsOnSide0.push_back(2); 
+	       emptySlotsOnSide0.push_back(3); 
+	       emptySlotsOnSide0.push_back(10); 
+	       emptySlotsOnSide0.push_back(13); 
+	       emptySlotsOnSide1.push_back(1); 
+	       emptySlotsOnSide1.push_back(2); 
+	       emptySlotsOnSide1.push_back(3); 
+	       emptySlotsOnSide1.push_back(4); 
+	       emptySlotsOnSide1.push_back(5); 
+	       int pm_no=0;
+	       int offset = 32;
                for(int side=0; side<=1; ++side){
+	         // numbering of scintillators is REVERSED in framework, therefore number 13 is actually number 1 on the vertical board!!!!!!!!
                  for (int wls_scin = 14; wls_scin <= 26; ++wls_scin) {
+                         int scin_no = wls_scin - 13;
+			 if(side == 0 && std::find(emptySlotsOnSide0.begin(), emptySlotsOnSide0.end() , scin_no) != emptySlotsOnSide0.end() )
+			 {
+				 continue;
+			 }
+			 if( side ==1 && std::find(emptySlotsOnSide1.begin(), emptySlotsOnSide1.end(), scin_no) != emptySlotsOnSide1.end() )
+			 {
+				 continue;
+			 }
                    for (int pm = 1; pm <= 4; ++pm) {
-
+		     if(side == 0)
+			     pm_no++;
+		     //it seems that IDs for side1 are reversed for some reason
+		     else
+		     {
+			     pm_no=32+offset;
+			     offset--;		     
+		     }
+			
                      for (auto &wls_sig : hits[side][wls_scin][pm]) {
 
                        if (fabs(wls_sig.first - h1[0]) < 20.0) {
 
-                         int scin_no = wls_scin - 13;
-                         int pm_no = pm;
+
+				 
+
+					 /*
                          if (side == 0) {
                            pm_no += (scin_no - (scin_no<=9 ? 4 : 5))*4;
                          } else {
                            pm_no += 32 + (13-scin_no)*4;
-                         }
+                         }*/
 
                          getStatistics().getHisto1D("h_wls_pm_no")->Fill(pm_no);
                          getStatistics().getHisto1D(Form("h_wls_scin_no_side%d", side))->Fill(scin_no);
+			getStatistics().getHisto2D("h_wls_pm_no_vs_mod_scin")->Fill(mod_scin, pm_no);
+			 getStatistics().getHisto1D(Form( "h_wls_pm_no_%d", mod_scin))->Fill(pm_no);
+			if(h1[3]+h1[4] > 2*80 && h1[3]+h1[4] < 2*120 )
+			{
+			 getStatistics().getHisto1D(Form( "h_wls_pm_no_%d_cut", mod_scin))->Fill(pm_no);
+			 getStatistics().getHisto2D("h_wls_pm_no_vs_mod_scin_cut")->Fill(mod_scin, pm_no);
+			}
 
                          wls_pm_coinc.push_back({pm_no, wls_sig.second});
                        }
                        
                      }
+
                    }
                  }
                }
-
                /*
                bool was_data = false;
                for (auto &wls_pm : wls_pm_coinc) {
@@ -565,8 +686,15 @@ bool TimeWindowCreator::exec()
                  tot_sum += wls_pm.second;
                }
                pos /= tot_sum;               
-
+		std::cout << "WLS after coin \t" <<	mod_scin << std::endl;
                getStatistics().getHisto1D("h_wls_pm_pos")->Fill(pos);
+	       getStatistics().getHisto1D(Form( "h_wls_pm_pos_%d", mod_scin))->Fill(pos);
+		getStatistics().getHisto2D("h_wls_pm_pos_vs_mod_scin")->Fill(mod_scin, pos);
+		if(h1[3]+h1[4] > 2*80 && h1[3]+h1[4] < 2*120 )
+		{
+			getStatistics().getHisto1D(Form( "h_wls_pm_pos_%d_cut", mod_scin))->Fill(pos);
+			getStatistics().getHisto2D("h_wls_pm_pos_vs_mod_scin_cut")->Fill(mod_scin, pos);
+		}
                
                break;
              }

@@ -63,6 +63,8 @@ protected:
 	static JPetSigCh generateSigCh(
 		double time, const JPetChannel& channel, JPetSigCh::EdgeType edge
 	);
+ 	bool readMappingForWLS();
+
 
   //      scin           side                  pos_in_matrix  thr     
   std::map<int,
@@ -73,7 +75,10 @@ protected:
 					       std::vector<float>> > > > > times;
 
   std::vector<std::pair<double, double>> fTagDtMeans;
-  
+
+  std::map<int, int> fTDCtoWLSIDside0;
+  std::map<int, int> fTDCtoWLSIDside1;
+  std::vector< std::map< int, int > > fMappingForWLS; 
 };
 
 #endif /* !TIMEWINDOWCREATOR_H */
